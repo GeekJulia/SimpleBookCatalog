@@ -65,19 +65,21 @@ async def delete_book(book_id: int, db: Session = Depends(get_db)):
 
 @app.put("/books/{book_id}", response_model=BookRespond)
 async def update_book(book_id: int, book_data: UpdateBook, db: Session = Depends(get_db)):
-    # Retrieve the book by ID
+    
     book = db.query(Book).filter(Book.id == book_id).first()
     if book is None:
         raise HTTPException(status_code=404, detail="Book not found")
-    # Update only the fields provided in the request
+    
     update_data = book_data.dict(exclude_unset=True)
     for key, value in update_data.items():
         setattr(book, key, value)  # Dynamically set the attribute
 
-    # Attempt to commit changes to the database
+    
     try:
         db.commit()
         db.refresh(book)  # Refresh to get the updated data
     except IntegrityError:
         db.rollback()  # Rollback in case of integrity error
         raise HTTPException(status_code=400, detail="ISBN must be unique")
+    
+    return book
